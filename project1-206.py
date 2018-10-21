@@ -2,6 +2,8 @@ import os
 import filecmp
 from dateutil.relativedelta import *
 from datetime import date
+import csv
+import datetime
 
 
 def getData(file):
@@ -9,15 +11,35 @@ def getData(file):
 #Input: file name
 #Ouput: return a list of dictionary objects where
 #the keys are from the first row in the data. and the values are each of the other rows
+	file_dict = []
+	infile = open(file, 'r')
+	lines = infile.readlines()
+	for line in lines:
+		data_dict = {}
+		values = line.split(",")
+		first = values[0]
+		last = values[1]
+		email = values[2]
+		year = values[3]
+		dob = values[4]
+		data_dict["First"] = first
+		data_dict["Last"] = last
+		data_dict["Email"] = email
+		data_dict["Year"] = year
+		data_dict["DOB"] = dob
 
-	pass
+		file_dict.append(data_dict)
+	return file_dict
+
 
 def mySort(data,col):
 # Sort based on key/column
 #Input: list of dictionaries and col (key) to sort on
 #Output: Return the first item in the sorted list as a string of just: firstName lastName
-
-	pass
+	sorted_lst = sorted(data, key = lambda k: k[col])
+	first = sorted_lst[0]["First"]
+	last = sorted_lst[0]["Last"]
+	return first + ' ' + last
 
 
 def classSizes(data):
@@ -26,16 +48,36 @@ def classSizes(data):
 # Output: Return a list of tuples sorted by the number of students in that class in
 # descending order
 # [('Senior', 26), ('Junior', 25), ('Freshman', 21), ('Sophomore', 18)]
+	fresh = 0
+	soph = 0
+	jun = 0
+	sen = 0
 
-	pass
-
+	for student in data:
+		if student["Year"] == "Freshman":
+			fresh += 1
+		elif student["Year"] == "Sophomore":
+			soph += 1
+		elif student["Year"] == "Junior":
+			jun += 1
+		elif student["Year"] == 'Senior':
+			sen += 1
+	year_list = [("Freshman", fresh), ("Sophomore", soph), ("Junior", jun), ("Senior", sen)]
+	return sorted(year_list, key = lambda k: k[-1], reverse= True)
 
 def findMonth(a):
 # Find the most common birth month form this data
 # Input: list of dictionaries
 # Output: Return the month (1-12) that had the most births in the data
-
-	pass
+	dict_month = {}
+	for student in a:
+		bday = student["DOB"].split("/")[0]
+		if bday in dict_month:
+			dict_month[bday] += 1
+		else:
+			dict_month[bday] = 1
+	sorted_months = sorted(dict_month, key = lambda k: dict_month[k], reverse = True)
+	return int(sorted_months[0])
 
 def mySortPrint(a,col,fileName):
 #Similar to mySort, but instead of returning single
@@ -43,8 +85,13 @@ def mySortPrint(a,col,fileName):
 # as fist,last,email
 #Input: list of dictionaries, col (key) to sort by and output file name
 #Output: No return value, but the file is written
-
-	pass
+	sorted_list = sorted(a, key = lambda k: k[col])
+	new_list = []
+	for x in sorted_list:
+		new_list.append((x["First"] + "," + x["Last"] + "," + x["Email"] + "\n"))
+	outFile = open(fileName, "w")
+	for x in new_list:
+		outFile.write(x)
 
 def findAge(a):
 # def findAge(a):
@@ -52,9 +99,26 @@ def findAge(a):
 # Output: Return the average age of the students and round that age to the nearest
 # integer.  You will need to work with the DOB and the current date to find the current
 # age in years.
+	age_list = []
+	year_today = (datetime.datetime.today().strftime("%m/%d/%Y"))
 
-	pass
+	for d in a[1:]:
+		DOB = d["DOB"]
+		date_today = year_today.split("/")
+		bday = DOB.split("/")
+		age = int(date_today[2]) - int(bday[2])
+		if int(bday[0]) >= int(date_today[0]):
+			age = int(date_today[2]) - int(bday[2]) - 1
+		if int(bday[0]) == int(date_today[0]) and int(bday[1]) > int(date_today[1]):
+			age = int(date_today[2]) - int(bday[2]) - 1
+		age_list.append(age)
 
+	total = 0
+	for x in age_list:
+		total += x
+
+	avg = float(total/ len(age_list))
+	return round(avg)
 
 ################################################################
 ## DO NOT MODIFY ANY CODE BELOW THIS
